@@ -39,6 +39,14 @@ __kex_program_exist() {
 
 kex_help() {
   echo "kex: build and install Elixir"
+  echo "usage: $0 <command>"
+  echo ""
+  echo "Commands:"
+  echo ""
+  echo "list               list availables versions"
+  echo "list-installs      list installed versions"
+  echo "update             update availables versions"
+  echo "install <version>  Install Elixir version <version>"
   exit 1
 }
 
@@ -50,6 +58,12 @@ kex_list() {
 kex_update() {
   echo "Updating..."
   $GIT pull -q 
+}
+
+kex_installed() {
+  for V in $(ls "$KEX_INSTALL") ; do
+    echo "$V - $KEX_INSTALL/$V"
+  done
 }
 
 kex_install() {
@@ -118,7 +132,13 @@ case "$1" in
   help)
     kex_help
     ;;
+  list-installs)
+    kex_installed
+    ;;
   install)
     kex_install "$2"
+    ;;
+  *)
+    kex_help
     ;;
 esac
