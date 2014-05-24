@@ -13,7 +13,7 @@ $ curl -O https://raw.githubusercontent.com/glejeune/kex/master/kex
 Then ensure it is executable
 
 ```
-$ chmod a+x kerl
+$ chmod a+x kex
 ```
 
 and drop it in your `$PATH`
