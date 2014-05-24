@@ -1,6 +1,6 @@
 # Kex
 
-Kex is a Kerl inspirexd tool to easy building and installing of [Elixir](http://elixir-lang.org) instancs.
+Kex is a Kerl inspired tool to easy building and installing of [Elixir](http://elixir-lang.org) instances.
 
 ## Downloading
 
