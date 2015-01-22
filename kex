@@ -90,7 +90,7 @@ kex_deactivate() {
 
 kex_deactivate nondestructive
 _KEX_PATH_REMOVABLE="$KEX_INSTALL/$1/bin"
-PATH="\${_KEX_PATH_REMOVABLE}:$PATH"
+PATH="\${_KEX_PATH_REMOVABLE}:\$PATH"
 export PATH _KEX_PATH_REMOVABLE
 if [ -n "\$BASH" -o -n "\$ZSH_VERSION" ]; then
   hash -r
