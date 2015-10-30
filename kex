@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-KEX_VERSION="0.0.2"
+KEX_VERSION="0.0.3"
 KEX_BASE_DIR="$HOME/.kex"
 KEX_CONFIG="$HOME/.kexrc"
 KEX_SOURCE_DIR="$KEX_BASE_DIR/git"
@@ -53,6 +53,7 @@ kex_help() {
   echo "install <version> [path] Install Elixir version <version>"
   echo "delete <version>         Uninstall Elixir version <version>"
   echo "upgrade                  Upgrade to it last version"
+  echo "status                   Print kex status"
   exit 1
 }
 
@@ -138,6 +139,25 @@ kex_upgrade() {
   curl -s https://raw.githubusercontent.com/glejeune/kex/master/kex -o "$KEX_SCRIPT"
 }
 
+kex_status() {
+  if [ -n "$_KEX_PATH_REMOVABLE" ] ; then
+    RUNNING_PATH=$(dirname "$_KEX_PATH_REMOVABLE")
+    while IFS='' read -r LINE ; do
+      CURRENT_PATH=$(echo $LINE | awk '{print $2}')
+      case "$CURRENT_PATH" in
+        $RUNNING_PATH) 
+          echo "=> $LINE"
+          ;;
+        *)
+          echo "   $LINE"
+          ;;
+      esac
+    done < "$KEX_INSTALLATIONS"
+  else
+    echo "No Elixir kex installation is currently active"
+  fi
+}
+
 if ! __kex_program_exist git; then
   echo "Can't find git!"
   exit 1
@@ -175,6 +195,9 @@ case "$1" in
     ;;
   upgrade)
     kex_upgrade
+    ;;
+  status)
+    kex_status
     ;;
   *)
     kex_help
