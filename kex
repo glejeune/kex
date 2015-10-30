@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (c) 2014 Gregoire Lejeune <gregoire.lejeune@free.fr>
+# Copyright (c) 2014, 2015 Gregoire Lejeune <gregoire.lejeune@free.fr>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+KEX_VERSION="0.0.2"
 KEX_BASE_DIR="$HOME/.kex"
 KEX_CONFIG="$HOME/.kexrc"
 KEX_SOURCE_DIR="$KEX_BASE_DIR/git"
 KEX_LOCAL="$KEX_SOURCE_DIR/elixir"
 KEX_INSTALL="$KEX_BASE_DIR/installs"
+KEX_INSTALLATIONS="$KEX_BASE_DIR/kex_installations"
 KEX_REMOTE="https://github.com/elixir-lang/elixir.git"
+KEX_BIN_REMOTE="https://raw.githubusercontent.com/glejeune/kex/master/kex"
 GIT="git -C $KEX_LOCAL"
 MAKE="make -C $KEX_LOCAL"
+KEX_SCRIPT="$0"
 
 __kex_program_exist() {
   if which $1 >/dev/null; then
@@ -38,21 +42,23 @@ __kex_program_exist() {
 }
 
 kex_help() {
-  echo "kex: build and install Elixir"
-  echo "usage: $0 <command>"
+  echo "kex v$KEX_VERSION - build and install Elixir"
+  echo "usage: $KEX_SCRIPT <command>"
   echo ""
   echo "Commands:"
   echo ""
-  echo "list               list availables versions"
-  echo "list-installs      list installed versions"
-  echo "update             update availables versions"
-  echo "install <version>  Install Elixir version <version>"
+  echo "list                     list availables versions"
+  echo "list-installs            list installed versions"
+  echo "update                   update availables versions"
+  echo "install <version> [path] Install Elixir version <version>"
+  echo "delete <version>         Uninstall Elixir version <version>"
+  echo "upgrade                  Upgrade to it last version"
   exit 1
 }
 
 kex_list() {
   echo "Available versions:"
-  $GIT tag
+  $GIT tag | xargs
 }
 
 kex_update() {
@@ -61,19 +67,31 @@ kex_update() {
 }
 
 kex_installed() {
-  for V in $(ls "$KEX_INSTALL") ; do
-    echo "$V - $KEX_INSTALL/$V"
-  done
+  if [ ! -f $KEX_INSTALLATIONS ] ; then 
+    for V in $(ls "$KEX_INSTALL") ; do
+      echo "$V $KEX_INSTALL/$V" >> $KEX_INSTALLATIONS
+    done
+  fi
+  cat $KEX_INSTALLATIONS
 }
 
 kex_install() {
   if $GIT checkout "$1" -q 2>/dev/null ; then
-    echo "Install Elixir $1"
-    $MAKE PREFIX="$KEX_INSTALL/$1"
-    mkdir -p "$KEX_INSTALL"
-    $MAKE PREFIX="$KEX_INSTALL/$1" install
-    $MAKE clean
-    cat <<ACTIVATE > "$KEX_INSTALL/$1/activate"
+    if [ "x$2" = "x" ] ; then
+      KEX_INSTALL_DIR="$KEX_INSTALL/$1"
+    else
+      KEX_INSTALL_DIR="$2"
+    fi
+    KEX_INSTALL_DIR_BASE=$(basename "$KEX_INSTALL_DIR")
+    KEX_INSTALL_DIR_ROOT=$(dirname "$KEX_INSTALL_DIR")
+    KEX_INSTALL_DIR_ROOT=$(cd "$KEX_INSTALL_DIR_ROOT"; pwd)
+    KEX_INSTALL_DIR="$KEX_INSTALL_DIR_ROOT/$KEX_INSTALL_DIR_BASE"
+    echo "Installing Elixir $1 in $KEX_INSTALL_DIR"
+    $MAKE PREFIX="$KEX_INSTALL_DIR" 2>&1 1> "$KEX_BASE_DIR/kex_install.log"
+    mkdir -p "$(dirname $KEX_INSTALL_DIR)" 2>&1 1>> "$KEX_BASE_DIR/kex_install.log"
+    $MAKE PREFIX="$KEX_INSTALL_DIR" install 2>&1 1>> "$KEX_BASE_DIR/kex_install.log"
+    $MAKE clean 2>&1 1> /dev/null
+    cat <<ACTIVATE > "$KEX_INSTALL_DIR/activate"
 kex_deactivate() {
   if [ -n "\$_KEX_PATH_REMOVABLE" ]; then
     PATH=\${PATH//\${_KEX_PATH_REMOVABLE}:/}
@@ -89,7 +107,7 @@ kex_deactivate() {
 }
 
 kex_deactivate nondestructive
-_KEX_PATH_REMOVABLE="$KEX_INSTALL/$1/bin"
+_KEX_PATH_REMOVABLE="$KEX_INSTALL_DIR/bin"
 PATH="\${_KEX_PATH_REMOVABLE}:\$PATH"
 export PATH _KEX_PATH_REMOVABLE
 if [ -n "\$BASH" -o -n "\$ZSH_VERSION" ]; then
@@ -98,12 +116,26 @@ fi
 ACTIVATE
     $GIT checkout master -q  
     echo "You can activate this installation running the following command:"
-    echo ". $KEX_INSTALL/$1/activate"
+    echo ". $KEX_INSTALL_DIR/activate"
     echo "Later on, you can leave the installation typing:"
     echo "kex_deactivate"
+    echo "$1 $KEX_INSTALL_DIR" >> $KEX_INSTALLATIONS
   else
     echo "Version $1 does not exist!"
   fi
+}
+
+kex_delete() {
+  KEX_INSTALL_PATH=$(cat "$KEX_INSTALLATIONS" | grep "^$1" | awk '{print $2}')
+  echo "Delete Elixir installation $1 from $KEX_INSTALL_PATH"
+  rm -rf "$KEX_INSTALL_PATH"
+  cat "$KEX_INSTALLATIONS" | grep -v "$KEX_INSTALL_PATH" > "$KEX_INSTALLATIONS.new"
+  mv "$KEX_INSTALLATIONS.new" "$KEX_INSTALLATIONS"
+}
+
+kex_upgrade() {
+  echo "Upgrade kex..."
+  curl -s https://raw.githubusercontent.com/glejeune/kex/master/kex -o "$KEX_SCRIPT"
 }
 
 if ! __kex_program_exist git; then
@@ -136,7 +168,13 @@ case "$1" in
     kex_installed
     ;;
   install)
-    kex_install "$2"
+    kex_install "$2" "$3"
+    ;;
+  delete)
+    kex_delete "$2"
+    ;;
+  upgrade)
+    kex_upgrade
     ;;
   *)
     kex_help
