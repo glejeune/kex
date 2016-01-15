@@ -167,7 +167,7 @@ if ! __kex_program_exist erl; then
   exit 1
 fi
 
-mkdir -P "$KEX_INSTALL"
+mkdir -p "$KEX_INSTALL"
 mkdir -p "$KEX_SOURCE_DIR"
 if [ -f "$KEX_CONFIG" ]; then . "$KEX_CONFIG"; fi
 if [ ! -d "$KEX_LOCAL" ]; then
