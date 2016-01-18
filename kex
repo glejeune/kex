@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-KEX_VERSION="0.0.3"
+KEX_VERSION="0.0.4"
 KEX_BASE_DIR="$HOME/.kex"
 KEX_CONFIG="$HOME/.kexrc"
 KEX_SOURCE_DIR="$KEX_BASE_DIR/git"
@@ -76,6 +76,11 @@ kex_installed() {
   cat $KEX_INSTALLATIONS
 }
 
+kex_faild() {
+  echo "Build faild!"
+  exit 1
+}
+
 kex_install() {
   if $GIT checkout "$1" -q 2>/dev/null ; then
     if [ "x$2" = "x" ] ; then
@@ -88,9 +93,9 @@ kex_install() {
     KEX_INSTALL_DIR_ROOT=$(cd "$KEX_INSTALL_DIR_ROOT"; pwd)
     KEX_INSTALL_DIR="$KEX_INSTALL_DIR_ROOT/$KEX_INSTALL_DIR_BASE"
     echo "Installing Elixir $1 in $KEX_INSTALL_DIR"
-    $MAKE PREFIX="$KEX_INSTALL_DIR" 2>&1 1> "$KEX_BASE_DIR/kex_install.log"
-    mkdir -p "$(dirname $KEX_INSTALL_DIR)" 2>&1 1>> "$KEX_BASE_DIR/kex_install.log"
-    $MAKE PREFIX="$KEX_INSTALL_DIR" install 2>&1 1>> "$KEX_BASE_DIR/kex_install.log"
+    $MAKE PREFIX="$KEX_INSTALL_DIR" 2>&1 1> "$KEX_BASE_DIR/kex_install.log" || kex_faild
+    mkdir -p "$(dirname $KEX_INSTALL_DIR)" 2>&1 1>> "$KEX_BASE_DIR/kex_install.log" || kex_faild
+    $MAKE PREFIX="$KEX_INSTALL_DIR" install 2>&1 1>> "$KEX_BASE_DIR/kex_install.log" || kex_faild
     $MAKE clean 2>&1 1> /dev/null
     cat <<ACTIVATE > "$KEX_INSTALL_DIR/activate"
 kex_deactivate() {
