@@ -64,11 +64,11 @@ kex_list() {
 
 kex_update() {
   echo "Updating..."
-  $GIT pull -q 
+  $GIT pull -q
 }
 
 kex_installed() {
-  if [ ! -f $KEX_INSTALLATIONS ] ; then 
+  if [ ! -f $KEX_INSTALLATIONS ] ; then
     for V in $(ls "$KEX_INSTALL") ; do
       echo "$V $KEX_INSTALL/$V" >> $KEX_INSTALLATIONS
     done
@@ -108,7 +108,7 @@ kex_deactivate() {
     hash -r
   fi
   if [ ! "\$1" = "nondestructive" ]; then
-    unset -f kerl_deactivate
+    unset -f kex_deactivate
   fi
 }
 
@@ -120,7 +120,7 @@ if [ -n "\$BASH" -o -n "\$ZSH_VERSION" ]; then
   hash -r
 fi
 ACTIVATE
-    $GIT checkout master -q  
+    $GIT checkout master -q
     echo "You can activate this installation running the following command:"
     echo ". $KEX_INSTALL_DIR/activate"
     echo "Later on, you can leave the installation typing:"
@@ -150,7 +150,7 @@ kex_status() {
     while IFS='' read -r LINE ; do
       CURRENT_PATH=$(echo $LINE | awk '{print $2}')
       case "$CURRENT_PATH" in
-        $RUNNING_PATH) 
+        $RUNNING_PATH)
           echo "=> $LINE"
           ;;
         *)
@@ -177,7 +177,7 @@ mkdir -p "$KEX_SOURCE_DIR"
 if [ -f "$KEX_CONFIG" ]; then . "$KEX_CONFIG"; fi
 if [ ! -d "$KEX_LOCAL" ]; then
   echo "Clone Elixir repo..."
-  git clone -q "$KEX_REMOTE" "$KEX_LOCAL" 
+  git clone -q "$KEX_REMOTE" "$KEX_LOCAL"
 fi
 
 case "$1" in

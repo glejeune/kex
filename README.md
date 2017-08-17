@@ -46,7 +46,7 @@ Later on, you can leave the installation typing:
 kex_deactivate
 ```
 
-By default, the version is installed in `~/.kerl/installs/<version>`.  However you can chose the installation directory by specifying it as second parameter :
+By default, the version is installed in `~/.kex/installs/<version>`.  However you can chose the installation directory by specifying it as second parameter :
 
 ```
 $ kex install v1.1.1 /opt/elixir/1.1.1
